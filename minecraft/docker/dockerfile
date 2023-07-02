@@ -1,0 +1,28 @@
+ARG gamemode=survival
+
+FROM debian:stable-slim AS base
+
+RUN apt-get update && apt-get install -y \
+    default-jre \
+    wget
+
+RUN mkdir /minecraft
+
+WORKDIR /minecraft
+
+RUN wget https://piston-data.mojang.com/v1/objects/84194a2f286ef7c14ed7ce0090dba59902951553/server.jar -O server.jar
+
+RUN echo "eula=true" > eula.txt
+
+FROM base AS gamemode-survival
+COPY server.properties.survival server.properties
+
+FROM base AS gamemode-creative
+COPY server.properties.creative server.properties
+
+FROM gamemode-${gamemode} AS final
+RUN echo "GAMEMODE is equal to ${gamemode}"
+
+EXPOSE 25565
+
+CMD ["java", "-Xmx1024M", "-Xms1024M", "-jar", "server.jar", "nogui"]
